@@ -1,0 +1,5 @@
+---
+- name: Removing Apache Site Vhost...
+  file:
+    path: "/etc/httpd/vhosts.d/{{ site_name }}.conf"
+  notify: Restart Apache2

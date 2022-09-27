@@ -1,0 +1,28 @@
+---
+- name: Removing site from maintenance - Step 1/8
+  become: True
+  lineinfile:
+    path: "/etc/httpd/vhosts.d/{{ site_name }}.conf"
+    regexp: "# Site em manutenção"
+    state: absent
+
+- name: Removing site from maintenance - Step 2/8
+  become: True
+  lineinfile:
+    path: "/etc/httpd/vhosts.d/{{ site_name }}.conf"
+    regexp: "RewriteEngine On"
+    state: absent
+
+- name: Removing site from maintenance - Step 3/8
+  become: True
+  lineinfile:
+    path: "/etc/httpd/vhosts.d/{{ site_name }}.conf"
+    regexp: 'RewriteRule.*'
+    state: absent
+
+- name: Removing site from maintenance - Step 4/8
+  become: True
+  lineinfile:
+    path: "/etc/httpd/vhosts.d/{{ site_name }}.conf"
+    regexp: 'RewriteCond.*'
+    state: absent

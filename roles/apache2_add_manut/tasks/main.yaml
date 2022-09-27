@@ -1,0 +1,56 @@
+---
+- name: Adding site in maintenance - Step 1/7
+  become: True
+  lineinfile:
+    path: "/etc/httpd/vhosts.d/{{ site_name }}.conf"
+    insertafter: 'LogLevel'
+    line: "# Site em manutenção"
+    state: present
+
+- name: Adding site in maintenance - Step 2/7
+  become: True
+  lineinfile:
+    path: "/etc/httpd/vhosts.d/{{ site_name }}.conf"
+    insertafter: 'Site'
+    line: "RewriteEngine On"
+    state: present
+
+- name: Adding site in maintenance - Step 3/7
+  become: True
+  lineinfile:
+    path: "/etc/httpd/vhosts.d/{{ site_name }}.conf"
+    insertafter: 'RewriteEngine'
+    line: 'RewriteCond %{HTTP:X-Forwarded-For} !^2811:86:00:c00: [NC]'
+    state: present
+
+- name: Adding site in maintenance - Step 4/7
+  become: True
+  lineinfile:
+    path: "/etc/httpd/vhosts.d/{{ site_name }}.conf"
+    insertafter: 'RewriteCond'
+    line: 'RewriteCond %{HTTP:X-Forwarded-For} !^10.88.0. [NC]'
+    state: present
+
+- name: Adding site in maintenance - Step 5/7
+  become: True
+  lineinfile:
+    path: "/etc/httpd/vhosts.d/{{ site_name }}.conf"
+    insertafter: "X-Forwarded-For"
+    line: 'RewriteCond %{HTTP:X-Forwarded-For} !^192.168.250. [NC]'
+    state: present
+
+- name: Adding site in maintenance - Step 6/7
+  become: True
+  lineinfile:
+    path: "/etc/httpd/vhosts.d/{{ site_name }}.conf"
+    insertafter: 'RewriteCond'
+    line: 'RewriteCond %{HTTP:X-Forwarded-For} !^192.168.177. [NC]'
+    state: present
+
+- name: Adding site in maintenance - Step 7/7
+  become: True
+  lineinfile:
+    path: "/etc/httpd/vhosts.d/{{ site_name }}.conf"
+    insertafter: 'RewriteCond'
+    line: 'RewriteRule ^(.*)$ http://manutencao.domain.com/$1'
+    state: present

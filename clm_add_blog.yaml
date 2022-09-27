@@ -1,0 +1,28 @@
+- hosts: cloudlinux
+  become: true
+  gather_facts: false
+
+  vars_files:
+    - vars.yaml
+
+  pre_tasks:
+
+    - name: Importing shortname task from cloudlinux_config role...
+      import_role:
+        name: cloudlinux_enable_config
+        tasks_from: shortname
+
+  tasks:
+
+    - name: Logging sites in manut...
+      lineinfile:
+        path: /var/log/site_manut.list
+        line: "{{ site_name }} - Manutenção"
+        create: yes
+      when: site_name is defined
+
+
+  roles:
+    - { role: apache2_blog_config }
+      # - { role: dns_ext_config  }
+   #- { role: dns_int_config  }

@@ -1,0 +1,89 @@
+---
+- name: Defining short name...
+  include: shortname.yaml
+
+- name: Calling Ldap task...
+  include: roles/cloudlinux_enable_config/tasks/group_to_user.yaml
+  with_items:
+    - "{{ user_names.split(',') }}"
+
+- name: Creating system group...
+  group:
+    name: "grp_{{ shortname }}"
+    state: present
+  when: option == '1.'
+
+- name: Creating and adding system user to system group...
+  user:
+    name: "usr_{{ shortname }}"
+    group: "grp_{{ shortname }}" 
+    home: "/sites/{{ site_name }}"
+    shell: /bin/false
+    create_home: yes
+    append: yes
+  when: option == '1.'
+
+- name: Setting permissions in site folder...
+  file:
+    path: "/sites/{{ site_name }}"
+    owner: "usr_{{ shortname }}"
+    group: "grp_{{ shortname }}" 
+    mode: 0775
+    state: directory
+    recurse: yes
+  run_once: True
+
+- name: Configuring User...
+  include: add_user.yaml
+
+- name: Removing immutable attribute
+  file:
+    path: /var/www/phphandles
+    attr: -i
+    recurse: yes
+
+- name: Creating phphandler directory...
+  file:
+    path: "/var/www/phphandles/usr_{{ shortname }}"
+    mode: '0555' 
+    owner: "usr_{{ shortname }}"
+    group: "grp_{{ shortname }}"
+    state: directory
+  when: option == '1.'
+
+- name: Populate with default page files...
+  copy:
+    src: "files/public_html"
+    dest: "/sites/{{ site_name }}"
+    owner: "usr_{{ shortname }}"
+    group: "grp_{{ shortname }}"
+    mode: '0775'
+  run_once: True
+  when: option == '1.'
+
+- name: Building phphandle file...
+  copy:
+    src: "files/phphandle"
+    dest: "/var/www/phphandles/usr_{{ shortname }}/php-fcgi"
+    owner: "usr_{{ shortname }}"
+    group: "grp_{{ shortname }}"
+    mode: '0555'
+    force: no
+  when: option == '1.'
+
+- name: Adding immutable attribute - 3/4
+  file:
+    path: /var/www/phphandles
+    attr: +i
+  when: option == '1.'
+
+- name: Adding immutable attribute - 4/4
+  file:
+    path: "/var/www/phphandles/usr_{{ shortname }}"
+    recurse: yes
+    attr: +i
+  when: option == '1.'
+
+- name: Including php selector tasks...
+  include: phpselector.yaml
+  when: option == '1.'

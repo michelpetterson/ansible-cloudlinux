@@ -1,0 +1,59 @@
+---
+- name: Searching LDAP DN object...
+  become: false
+  shell: >
+    ldapsearch -x -D CN=sync-ad,OU=Servicos,DC=intranet,DC=domain,DC=br -w L9qr4jfg -b dc=intranet,dc=domain,dc=br -h "{{ ldap_server }}" -LLL "(samaccountname="{{ item }}")" distiguishedname | grep "^dn: .*" | sed 's/^dn: //g'
+  run_once: True
+  delegate_to: localhost
+  register: DN
+
+- name: Searching LDAP User UIDNumber...
+  become: false
+  shell: >
+    ldapsearch -E pr=2000/noprompt -D CN=sync-ad,OU=Servicos,DC=intranet,DC=domain,DC=br -w L9qr4jfg -x -b dc=intranet,dc=domain,dc=br -h ldap.intranet.domain.com  -L "(msSFU30NisDomain=*)" uidnumber  | grep "^uidNumber: .*" | awk '{print $2}' | sort -n | tail -n 1
+  run_once: True
+  delegate_to: localhost
+  register: UIDNumber
+
+- name: Copying ldif template file...
+  become: false
+  shell: >
+    cp roles/cloudlinux_enable_config/files/add_user.ldif.template roles/cloudlinux_enable_config/files/add_user.ldif.generated
+  run_once: True
+  delegate_to: localhost
+
+- name: Building ldif file...STEP 1/3
+  become: false
+  replace:
+    path: roles/cloudlinux_enable_config/files/add_user.ldif.generated
+    regexp: '_DN_'
+    replace: "{{ DN.stdout }}"
+  run_once: True
+  delegate_to: localhost
+
+- name: Building ldif file...STEP 2/3
+  become: false
+  replace:
+    path: roles/cloudlinux_enable_config/files/add_user.ldif.generated
+    regexp: '_UID_'
+    replace: "{{ item }}"
+  run_once: True
+  delegate_to: localhost
+
+- name: Building ldif file...STEP 3/3
+  become: false
+  replace:
+    path: roles/cloudlinux_enable_config/files/add_user.ldif.generated
+    regexp: '_UIDNUM_'
+    replace: "{{ UIDNumber.stdout|int + 1 }}"
+  run_once: True
+  delegate_to: localhost
+
+- name: Modifying Ldap user attributes...
+  become: false
+  shell: >
+    ldapmodify -x -D CN=sync-ad,OU=Servicos,DC=intranet,DC=domain,DC=br -w L9qr4jfg -h "{{ ldap_server }}" -f roles/cloudlinux_enable_config/files/add_user.ldif.generated
+  run_once: True
+  delegate_to: localhost
+  register: result
+  failed_when: result.rc != 0 and result.rc != 68

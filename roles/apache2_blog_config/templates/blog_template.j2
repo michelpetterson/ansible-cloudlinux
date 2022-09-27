@@ -1,0 +1,30 @@
+<VirtualHost [2801:11:01:1911::211]:80 10.1.1.211:80 [2801:88:00:1911::212]:80 10.1.1.212:80>
+        ServerName   {{ site_name }}
+        ServerAlias  www.{{ site_name }}
+        ServerAdmin  suporte@listas.domain.com
+        ProxyPass /  http://site.domain.com/{{ shortname }}
+        ProxyPassReverse /  http://site.domain.com/{{ shortname }}
+        #ErrorLog  "|/usr/bin/logger -t http_errors_{{ shortname }} -p local6.info"
+        #CustomLog "|/usr/bin/logger -t http_access_{{ shortname }} -p local6.info" combined
+        ##LogLevel Debug
+        ErrorLog "/var/log/httpd/{{ shortname }}-error.log"
+        <Directory "/sites/site.domain.com/public_html">
+                Options +FollowSymLinks +SymLinksIfOwnerMatch
+                AllowOverride All
+                Require all granted
+         </Directory>
+
+<IfModule mod_fcgid.c>
+      SuexecUserGroup usr_blog grp_blog
+      ScriptAlias /cgi-bin /var/www/phphandles/usr_blog/php-fcgi
+      Action application/x-httpd-php /cgi-bin/php.fcgi
+    <Directory /sites/site.domain.com/public_html>
+         Options +ExecCGI
+         AllowOverride All
+         AddHandler fcgid-script .php
+         FCGIWrapper /var/www/phphandles/usr_blog/php-fcgi .php
+         Require all granted
+   </Directory>
+</IfModule>
+
+</VirtualHost>

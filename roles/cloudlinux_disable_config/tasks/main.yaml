@@ -1,0 +1,58 @@
+---
+- name: Defining short name...
+  include: shortname.yaml
+
+- name: Identifying users from site...
+  shell: >
+    grep "grp_{{ shortname }}" /etc/group | cut -d: -f 4 | sed 's/,/ /'
+  register: users
+
+- name: Backuping site data dir...
+  archive:
+    path: "/sites/{{ site_name }}"
+    dest: "/sites/sites_disabled/{{ site_name }}.tar.bz2"
+    remove: yes
+    format: bz2
+
+- name: Removing system user...
+  user:
+    name: "usr_{{ shortname }}"
+    remove: yes
+    state: absent
+
+- name: Removing system group...
+  group:
+    name: "grp_{{ shortname }}"
+    state: absent
+
+- name: Removing links associated with the site...
+  file:
+    path: "/home/{{ item }}/{{ site_name }}"
+  with_items:
+    - "{{ users.stdout.split() }}"
+
+- name: Removing immutable attribute - 1/2
+  file:
+    path: /var/www/phphandles
+    attr: -i
+
+- name: Removing immutable attribute - 2/2
+  file:
+    path: "/var/www/phphandles/usr_{{ shortname }}"
+    recurse: yes
+    attr: -i
+
+- name: Removing phphandler directory...
+  file:
+    path: "/var/www/phphandles/usr_{{ shortname }}"
+    state: absent
+
+- name: Adding immutable attribute - 1/2
+  file:
+    path: /var/www/phphandles
+    attr: +i
+
+- name: Adding immutable attribute - 2/2
+  file:
+    path: "/var/www/phphandles/usr_{{ shortname }}"
+    attr: +i

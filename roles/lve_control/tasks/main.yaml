@@ -1,0 +1,12 @@
+---
+
+- name: Configuring CPU limit...
+  shell: >
+    lvectl set "{{ id.stdout }}" --speed="{{ cpu }}"%
+  when: cpu != '' and id != ''
+
+- name: Configuring Memory limit...
+  shell: >
+    lvectl set "{{ id.stdout }}" --pmem="{{ mem }}"m
+  when: mem != '' and id != ''
+

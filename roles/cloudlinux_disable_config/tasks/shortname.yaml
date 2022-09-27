@@ -1,0 +1,3 @@
+---
+- set_fact:
+    shortname: "{{ site_name | replace('.domain.com','') | replace('.','-') }}"

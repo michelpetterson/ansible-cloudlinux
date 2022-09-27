@@ -1,0 +1,11 @@
+---
+- name: Getting serial zone...
+  shell: >
+    awk '/serial/ {print $1}' /etc/bind/bd-zonas/diretos/pri/db.domain.com
+  register: serial
+
+- name: Changing serial zone...
+  replace:
+    path: /etc/bind/bd-zonas/diretos/pri/db.domain.com
+    regexp: '^(.*)serial(.*)$'
+    replace: "         {{ ansible_date_time.date | replace('-','') + serial.stdout[-2:] }}  ; serial"

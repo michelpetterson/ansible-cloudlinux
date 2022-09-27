@@ -1,0 +1,9 @@
+---
+- name: Configuring Apache Site Vhost...
+  template:
+    src: templates/site_template.j2
+    dest: /etc/httpd/vhosts.d/{{ site_name }}.conf
+    owner: root
+    group: root
+    mode: '0640'
+  notify: Restart Apache2

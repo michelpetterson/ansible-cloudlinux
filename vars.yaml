@@ -1,0 +1,5 @@
+---
+dns_srv_ext: 10.0.2.133
+ldap_server: ldap.intranet.domain.com
+default_php_version: 7.3
+shdir_free: []

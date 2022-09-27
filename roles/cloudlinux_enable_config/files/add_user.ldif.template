@@ -1,0 +1,30 @@
+dn: _DN_
+changetype: modify
+replace: homeDirectory
+homeDirectory: /home/_UID_
+-
+replace: syncNisDomain
+syncNisDomain: DOMAIN
+-
+replace: msSFUHomeDirectory
+msSFUHomeDirectory: /home/_UID_
+-
+replace: unixHomeDirectory
+unixHomeDirectory: /home/_UID_
+-
+replace: msSFU30NisDomain
+msSFU30NisDomain: intranet
+-
+replace: gidNumber
+gidNumber: 10007
+-
+replace: uidNumber
+uidNumber: _UIDNUM_
+-
+replace: loginShell
+loginShell: /bin/false
+
+dn: CN=cl-www,OU=Grupos,DC=intranet,DC=domain,DC=com
+changetype: modify
+add: member
+member: _DN_

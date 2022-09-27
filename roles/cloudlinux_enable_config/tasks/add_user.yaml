@@ -1,0 +1,69 @@
+---
+- name: Clean SSSD cache...
+  shell: >
+    systemctl stop sssd && systemctl start sssd
+
+- name: Pause for 30 seconds to build sssd cache
+  pause:
+    seconds: 20
+
+- name: Configuring user to manage site...
+  shell: >
+    usermod -a -G "grp_{{ shortname }}" "{{ item }}"
+  with_items:
+    - "{{ user_names.split(',') }}"
+
+- name: Ensuring that user home dir exist...
+  shell: >
+    mkhomedir_helper "{{ item }}"
+  with_items:
+    - "{{ user_names.split(',') }}"
+
+- name: Find Used sharedirs
+  shell: >
+    find /sharedirs -type l -iname "{{ user_names }}" | cut -d/ -f 3 | sort -u
+  args:
+    executable: /bin/bash
+  register: shdir_used
+  run_once: True
+
+- name: Find All shareddirs
+  shell: >
+    find /sharedirs -type l | cut -d\/ -f 3 | sort -u
+  register: shdir_all
+  when: shdir_used.stdout != ""
+  run_once: True
+
+- set_fact:
+    shdir_free: "{{ shdir_free + [ item ] }}"
+  with_items:
+    - "{{ shdir_all.stdout_lines }}"
+  when: item not in shdir_used.stdout_lines and shdir_used.stdout != ""
+  run_once: True
+
+- set_fact:
+    shdir_free: "{{ shdir_free + [ 'sharedir0' ] }}"
+  when: shdir_used.stdout == ""
+  run_once: True
+
+- name: Create a symbolic link -  1/2
+  file:
+    src: "/sites/{{ site_name }}"
+    dest: "/sharedirs/{{ item.1 }}/{{ item.0 }}"
+    state: link
+  delegate_to: server.domain.com
+  run_once: True
+  with_nested:
+    - "{{ user_names.split(',') }}"
+    - "{{ shdir_free[0] }}"
+
+- name: Create a symbolic link - 2/2
+  file:
+    src: "/sharedirs/{{ item.1 }}/{{ item.0 }}"
+    dest: "/home/{{ item.0 }}/{{ site_name }}"
+    state: link
+  delegate_to: server.domain.com
+  run_once: True
+  with_nested:
+    - "{{ user_names.split(',') }}"
+    - "{{ shdir_free[0] }}"

@@ -1,0 +1,38 @@
+---
+
+- name: Creating DNS record in Bind...
+  become: True
+  lineinfile:
+    path: /etc/bind/bd-zonas/diretos/pri/db.domain.com
+    insertafter: ';;Begin here'
+    line: "{{ site_name | replace('.domain.com','') }} CNAME webcl.domain.com." 
+  register: result
+  run_once: True
+  delegate_to: "{{ dns_srv_ext }}"
+
+- name: Getting serial zone...
+  become: True
+  shell: >
+    awk '/serial/ {print $1}' /etc/bind/bd-zonas/diretos/pri/db.domain.com
+  register: serial
+  run_once: True
+  delegate_to: "{{ dns_srv_ext }}"
+
+- name: Changing serial zone...
+  become: True
+  replace:
+    path: /etc/bind/bd-zonas/diretos/pri/db.domain.com
+    regexp: '^(.*)serial(.*)$'
+    replace: "         {{ ansible_date_time.date | replace('-','') + serial.stdout[-2:] }}  ; serial"
+  delegate_to: "{{ dns_srv_ext }}"
+  run_once: True
+  when: result.changed
+
+- name: Generating DNSSEC RRSets...
+  shell: >
+    dnssec-signzone -K /etc/bind/keys/ -o domain.com -g -t -k Kdomain.com.+005+63388 /etc/bind/bd-zonas/diretos/pri/db.domain.com Kdomain.com.+005+41178
+  become: True
+  delegate_to: "{{ dns_srv_ext }}"
+  run_once: True
+  when: result.changed
+  notify: Restart Bind9

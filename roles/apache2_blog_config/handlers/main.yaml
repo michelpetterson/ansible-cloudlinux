@@ -1,0 +1,6 @@
+---
+- name: Restart Apache2
+  systemd:
+    name: httpd
+    state: reloaded
+  become: True

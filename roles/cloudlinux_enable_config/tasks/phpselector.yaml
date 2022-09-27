@@ -1,0 +1,42 @@
+---
+- name: Configuring PHP version...
+  become: true
+  ignore_errors: yes
+  shell: >
+     selectorctl --set-user-current="{{ default_php_version }}" --user="usr_{{ shortname }}"
+  run_once: True
+
+- name: Configuring PHP modules...
+  become: true
+  ignore_errors: yes
+  shell: >
+    selectorctl --replace-extensions=dom,fileinfo,gd,imagick,json,mysqlnd,nd_mysqli,mbstring,mcrypt,mysql,mysqli,pdo,pdo_mysql,pdo_sqlite,pgsql,phar,sockets,wddx,xdebug,xmlreader,xmlrpc,xmlwriter,xsl,zip,imagick,gmagick,bcmath,gd,mbstring,exif,curl,gd --version="{{ default_php_version }}" --user="usr_{{ shortname }}"
+  run_once: True
+
+- name: Applying PHP Config...
+  become: true
+  ignore_errors: yes
+  shell: >
+     selectorctl --reset-user-extensions --version="{{ default_php_version }}" --user="usr_{{ shortname }}"
+  run_once: True
+
+- name: Enforcing User permissions...
+  file:
+    path: "/home/{{ item }}"
+    owner: "{{ item }}"
+    group: "root"
+    mode: 0750
+    state: directory
+    recurse: yes
+    follow: no
+  with_items:
+    - "{{ user_names.split(',') }}"
+  run_once: True
+
+- name: Remounting user cagefs...
+  become: true
+  ignore_errors: yes
+  shell: >
+     cagefsctl --remount "{{ item }}"
+  with_items:
+    - "{{ user_names.split(',') }}"

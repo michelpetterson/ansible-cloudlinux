@@ -1,0 +1,10 @@
+---
+- name: Configuring Apache Blog Vhost...
+  template:
+    src: templates/blog_template.j2
+    dest: /etc/httpd/vhosts.d/blogs/{{ site_name }}.conf
+    owner: root
+    group: root
+    mode: '0640'
+  notify: Restart Apache2
+

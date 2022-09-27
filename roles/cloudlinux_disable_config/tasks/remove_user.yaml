@@ -1,0 +1,37 @@
+---
+- name: Defining short name...
+  include: shortname.yaml
+
+- name: Removing user from site group...
+  shell: >
+    gpasswd -d "{{ item }}" "grp_{{ shortname }}" 
+  with_items:
+    - "{{ user_names.split(',') }}"
+
+- name: Removing links associated with the site...
+  file:
+    path: "/home/{{ item }}/{{ site_name }}"
+    state: absent
+  with_items:
+    - "{{ user_names.split(',') }}"
+
+- name:
+  shell: >
+    readlink "/home/{{ item }}/{{ site_name }}"
+  register: link_target
+  with_items:
+    - "{{ user_names.split(',') }}"
+
+- name: Removing immutable attribute - 2/3
+  file:
+    path: "{{ item }}"
+    attr: -i
+  with_items:
+    - "{{ link_target.stdout_lines }}"
+
+- name: Removing links associated with user...
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "{{ link_target.stdout_lines }}"

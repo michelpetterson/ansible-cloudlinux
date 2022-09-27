@@ -1,0 +1,21 @@
+- hosts: cloudlinux
+  become: true
+  gather_facts: false
+
+  vars_files:
+    - vars.yaml
+
+  tasks:
+
+    - name: Logging sites in manut...
+      lineinfile:
+        path: /var/log/site_manut.list
+        line: "{{ site_name }} - Manutenção"
+        create: yes
+      when: site_name is defined
+
+  roles:
+    - { role: cloudlinux_enable_config }
+    - { role: apache2_enable_site_config }
+      #- { role: ext_dns_config  }
+   #- { role: int_dns_config  }

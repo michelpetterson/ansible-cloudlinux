@@ -1,0 +1,23 @@
+- hosts: cloudlinux
+  become: true
+  gather_facts: false
+
+  vars_files:
+    - vars.yaml
+
+  tasks:
+    - name: Logging sites in manut...
+      lineinfile:
+        path: /var/log/site_manut.list
+        line: "{{ site_name }} - Manutenção"
+        create: yes
+      when: site_name is defined
+
+    - name: Reloading Apache config...
+      systemd:
+        name: httpd
+        state: reloaded
+
+  roles:
+    - { role: apache2_add_manut, when: option == '5.' }
+    - { role: apache2_del_manut, when: option == '6.' }
